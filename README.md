@@ -8,6 +8,9 @@ Examples
 
 ```
 
+import filters
+import hsl_to_rgb, rgb_to_hsl from colortools
+
 extern gl: {
 // indentation doesnt matter
 }
@@ -44,6 +47,8 @@ varying vUv: vec2
 def main():
   # for i in [0..2]:
   #   pass
+  color = rgb_to_hsl(hsl_to_rgb(vec3(0.1, 0.2, 0.3)))
+  color = filters.bw(color)
   gl_FragColor = texture2D(texture, vUv).rgb
   gl_FragColor *= lighten(alpha(color, 0.5).rgb, 10) * darken(color)
 
