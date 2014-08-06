@@ -9,7 +9,7 @@ Examples
 ```
 
 import filters
-import hsl_to_rgb, rgb_to_hsl from colortools
+import colortools : hsl_to_rgb, rgb_to_hsl
 
 extern gl: {
 // indentation doesnt matter
