@@ -13,6 +13,9 @@ import colortools : hsl_to_rgb, rgb_to_hsl
 
 glsl: {
 // indentation doesnt matter
+#ifdef GL_ES
+#define mediump
+#endif
 }
 
 glsl:
