@@ -38,12 +38,13 @@ def sub(a, b): return a - b
 import darken, lighten from color
 import alpha
 
-
 uniform texture: sampler2D
-uniform color: vec3
+uniform color: vec3 = vec3(1.0, 1.0, 1.0)
 
 varying vUv: vec2
 
+@enable(GL_ALPHA_TEST)
+@disable(GL_DEPTH_TEST)
 def main():
   # for i in [0..2]:
   #   pass
