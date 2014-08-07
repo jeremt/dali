@@ -20,6 +20,9 @@ glsl: {
 
 glsl:
   // it should be indent by at least 1 tab
+  #ifdef GL_ES
+  #define mediump
+  #endif
 
 def darken(input: vec3, value: float) -> vec3
   return input - value
