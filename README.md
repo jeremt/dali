@@ -11,11 +11,11 @@ Examples
 import filters
 import colortools : hsl_to_rgb, rgb_to_hsl
 
-extern gl: {
+glsl: {
 // indentation doesnt matter
 }
 
-extern gl:
+glsl:
   // it should be indent by at least 1 tab
 
 def darken(input: vec3, value: float) -> vec3
