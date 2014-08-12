@@ -4,7 +4,7 @@ pegjs = require "pegjs"
 Formatter = require "../lib/visitors/formatter"
 Printer = require "../lib/utils/printer"
 
-testGetSource = ->
+testFull = ->
   source = fs.readFileSync("../examples/full.glsl").toString()
   grammar = fs.readFileSync("../grammar/glsl.pegjs").toString()
   try
@@ -15,4 +15,4 @@ testGetSource = ->
   catch e
     Printer.printError(e, source)
 
-testGetSource()
+testFull()

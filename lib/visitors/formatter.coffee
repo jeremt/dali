@@ -67,8 +67,6 @@ class FormatterVisitor extends BaseVisitor
     for statement in node.statements
       @visitNode(statement)
       # TODO(jeremie) find a way to avoid this kind of exceptions
-      unless statement.type in ['function_declaration']
-        @addSemicolon()
     # @visitNodes(node.statements)
 
   onFunctionDeclaration: (node) ->
@@ -119,10 +117,11 @@ class FormatterVisitor extends BaseVisitor
       @visitNode(parameter)
     @_sourceCode += ")"
 
-  onDeclarator: (node) ->
+  onDeclarator: (node, newline) ->
     @visitNode(node.typeAttribute)
     @_sourceCode += " "
     @visitNodes(node.declarators)
+    @addSemicolon(newline)
 
   onDeclaratorItem: (node) ->
     @visitNode(node.name)
@@ -149,8 +148,7 @@ class FormatterVisitor extends BaseVisitor
 
   onForStatement: (node) ->
     @_sourceCode += if @minified then "for(" else "for ("
-    @visitNode(node.initializer)
-    @addSemicolon(false)
+    @visitNode(node.initializer, false)
     @visitNode(node.condition)
     @addSemicolon(false)
     @visitNode(node.increment)
@@ -166,9 +164,9 @@ class FormatterVisitor extends BaseVisitor
     @addLeftBrace()
     for member in node.members
       @visitNode(member)
-      @addSemicolon()
     @_indentLevel -= 1
     @addRightBrace(false)
+    @addSemicolon()
 
   onBinary: (node) ->
 
