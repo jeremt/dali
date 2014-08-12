@@ -29,18 +29,18 @@ class BaseVisitor
   #     Otherwise, it will recurse on the node's children.
   # @param {Object} the AST node to serialize.
   #
-  visitNode: (node) ->
+  visitNode: (node, args...) ->
     funcName = @getFunctionName(node.type)
     if @[funcName]?
-      @[funcName](node)
+      @[funcName](node, args...)
     else
       throw new VisitorError("unsupported node type `#{node.type}`")
 
   # Visit all the nodes of the given array.
   # @param {Array<Object>} nodes an array of ast nodes
   #
-  visitNodes: (nodes) ->
+  visitNodes: (nodes, args...) ->
     for node in nodes
-      @visitNode(node)
+      @visitNode(node, args...)
 
 module.exports = BaseVisitor

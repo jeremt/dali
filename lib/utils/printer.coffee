@@ -24,8 +24,13 @@ class Printer
     oneline ?= false
     print ?= console.log
     source = source.split('\n')
-    print "#{label}: #{error.line}(#{error.column}): #{error.message}"
-    unless oneline
+    message = ""
+    if error.fileName?
+      message += "#{error.fileName}: "
+    if error.line? and error.column?
+      message += "#{error.line}:#{error.column}: "
+    print message + "#{label}: #{error.message}"
+    if not oneline and source?
       current = error.line - 1
       firstLine = max(current - before, 0)
       lastLine = min(current + after, source.length - 1)
@@ -36,7 +41,7 @@ class Printer
         spaces += " " for i in [0..n]
         print "#{cursor} #{line + 1}#{spaces}| #{source[line]}"
 
-  @printError: -> @printMessage.call(@, 'Error', arguments...)
-  @printWarning: -> @printMessage.call(@, 'Warning', arguments...)
+  @printError: -> @printMessage.call(@, 'error', arguments...)
+  @printWarning: -> @printMessage.call(@, 'warning', arguments...)
 
 module.exports = Printer
