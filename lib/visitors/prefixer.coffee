@@ -92,11 +92,11 @@ class PrefixerVisitor extends BaseVisitor
   onUnary: (node) ->
     @visitNode(node.expression)
 
-  onPostfix: (node) ->
-
   onIdentifier: (node) ->
     @maybePrefix(node)
 
+  onPreprocessor: (node) ->
+  onPostfix: (node) ->
   onInt: (node) ->
   onFloat: (node) ->
   onBool: (node) ->

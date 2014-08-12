@@ -15,6 +15,10 @@
 // Modified by Jeremie Taboada
 // Fixed bugs
 // * operator < and > was <null and >null
+// Added features
+// * ...
+// To do
+// * Handle multi-line macro
 
 /*
  * This is a PEG.js grammar for the OpenGL ES shading language 1.0.

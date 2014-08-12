@@ -66,8 +66,6 @@ class FormatterVisitor extends BaseVisitor
   onRoot: (node) ->
     for statement in node.statements
       @visitNode(statement)
-      # TODO(jeremie) find a way to avoid this kind of exceptions
-    # @visitNodes(node.statements)
 
   onFunctionDeclaration: (node) ->
     @visitNode(node.returnType)
@@ -207,8 +205,40 @@ class FormatterVisitor extends BaseVisitor
       @_sourceCode += node.precision + " "
     @_sourceCode += node.name
 
-  onInt: (node) -> @_sourceCode += node.value
-  onBool: (node) -> @_sourceCode += node.value
+  onInt:   (node) -> @_sourceCode += node.value
+  onBool:  (node) -> @_sourceCode += node.value
   onFloat: (node) -> @_sourceCode += node.value
+
+  onPreprocessor: (node) ->
+    @_sourceCode += node.directive
+    @_sourceCode += " "
+
+    if node.identifier?
+      @_sourceCode += node.identifier
+      @_sourceCode += " "
+
+    if node.parameters?
+      @_sourceCode += "("
+      isFirst = true
+      for parameter in node.parameters
+        if isFirst is true
+          isFirst = false
+        else
+          @addComma()
+        @visitNode(parameter)
+      @_sourceCode += ")"
+
+    if node.token_string?
+      @_sourceCode += node.token_string
+
+    if node.value?
+      @_sourceCode += node.value
+
+    if node.guarded_statements?
+      @addNewLine()
+      @visitNodes(node.guarded_statements)
+      @_sourceCode += "#endif"
+
+    @addNewLine()
 
 module.exports = FormatterVisitor
