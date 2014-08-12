@@ -16,11 +16,8 @@ testFull = ->
     parser = pegjs.buildParser(grammar)
     data = parser.parse(source)
 
-    prefixer = new Prefixer()
-    prefixer.applyPrefix(data, "__filter_full_")
-
-    fmt = new Formatter()
-    console.log fmt.getSource(data)
+    Prefixer.applyPrefix(data, "__filter_full_")
+    console.log Formatter.getSource(data)
 
   catch e
     if e.name is "SyntaxError"

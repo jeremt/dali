@@ -10,7 +10,7 @@ testFull = ->
   try
     parser = pegjs.buildParser(grammar)
     data = parser.parse(source)
-    fmt = new Formatter(prefix: "__filter_full_")
+    fmt = new Formatter()
     console.log fmt.getSource(data)
   catch e
     Printer.printError(e, source)

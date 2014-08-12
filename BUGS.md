@@ -1,4 +1,9 @@
 
+Formatter
+---------
+
+* Macro doesnt work when minified (they should be proccessed before parsing)
+
 Grammar
 -------
 

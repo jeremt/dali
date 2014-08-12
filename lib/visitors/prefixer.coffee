@@ -6,6 +6,9 @@ BaseVisitor = require "./base"
 #
 class PrefixerVisitor extends BaseVisitor
 
+  @applyPrefix: (node, prefix) ->
+    new PrefixerVisitor().applyPrefix(node, prefix)
+
   # Apply the given prefix to the given ast node recursively.
   # @param {Object} node the root ast node
   # @param {String} prefix the prefix to apply
@@ -27,7 +30,7 @@ class PrefixerVisitor extends BaseVisitor
 
   # Add a prefix to the node's name if it's a global and there is no local
   #     one with the same name.
-  maybePrefix: (node) ->
+  _maybePrefix: (node) ->
     if node.name in @_globalNames and not (node.name in @_localNames)
       node.name = @prefix + node.name
 
@@ -93,7 +96,7 @@ class PrefixerVisitor extends BaseVisitor
     @visitNode(node.expression)
 
   onIdentifier: (node) ->
-    @maybePrefix(node)
+    @_maybePrefix(node)
 
   onPreprocessor: (node) ->
   onPostfix: (node) ->

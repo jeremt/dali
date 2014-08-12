@@ -7,36 +7,39 @@ BaseVisitor = require("./base")
 #
 class FormatterVisitor extends BaseVisitor
 
-  @getSource: (node) ->
-    new FormatterVisitor().getSource(node)
+  @getSource: (node, kw) ->
+    new FormatterVisitor().getSource(node, kw)
 
-  # Creates a FormatterVisitor.
-  # @constructor
-  #
+  # Return a string which contains the generated GLSL source code for the given
+  #     AST node, well formatted according the given paramters.
   # @param {String} tab the string used for tabulations
   # @param {Boolean} minified wheter the compiled code should be minified
   #
-  constructor: ({@tab, @minified} = {}) ->
+  getSource: (node, {@tab, @minified} = {}) ->
     @tab ?= '  '
     @minified ?= false
+    @_sourceCode = ""
+    @_indentLevel = 0
+    @visitNode(node)
+    @_sourceCode
 
-  addNewLine: ->
+  _addNewLine: ->
     if @minified then return ""
     @_sourceCode += "\n"
     for i in [0...@_indentLevel]
       @_sourceCode += @tab
 
-  addOperator: (op) ->
+  _addOperator: (op) ->
     @_sourceCode += if @minified then op else " #{op} "
 
-  addLeftBrace: ->
+  _addLeftBrace: ->
     if @minified
       @_sourceCode += "{"
     else
       @_sourceCode += " {"
-      @addNewLine()
+      @_addNewLine()
 
-  addRightBrace: (newline = true) ->
+  _addRightBrace: (newline = true) ->
     if @minified
       @_sourceCode += "}"
     else
@@ -44,24 +47,18 @@ class FormatterVisitor extends BaseVisitor
       @_sourceCode = @_sourceCode.substr(0, @_sourceCode.length - @tab.length)
       @_sourceCode += "}"
       if newline
-        @addNewLine()
+        @_addNewLine()
 
-  addComma: ->
+  _addComma: ->
     @_sourceCode += if @minified then "," else ", "
 
-  addSemicolon: (newline = true) ->
+  _addSemicolon: (newline = true) ->
     @_sourceCode += ";"
     unless @minified
       if newline
-        @addNewLine()
+        @_addNewLine()
       else
         @_sourceCode += " "
-
-  getSource: (node) ->
-    @_sourceCode = ""
-    @_indentLevel = 0
-    @visitNode(node)
-    @_sourceCode
 
   onRoot: (node) ->
     for statement in node.statements
@@ -77,7 +74,7 @@ class FormatterVisitor extends BaseVisitor
       if isFirst is true
         isFirst = false
       else
-        @addComma()
+        @_addComma()
       @visitNode(parameter)
     @_sourceCode += ")"
     @visitNode(node.body)
@@ -90,18 +87,18 @@ class FormatterVisitor extends BaseVisitor
   onReturn: (node) ->
     @_sourceCode += "return "
     @visitNode(node.value)
-    @addSemicolon()
+    @_addSemicolon()
 
   onScope: (node) ->
     @_indentLevel += 1
-    @addLeftBrace()
+    @_addLeftBrace()
     @visitNodes(node.statements)
     @_indentLevel -= 1
-    @addRightBrace()
+    @_addRightBrace()
 
   onExpression: (node) ->
     @visitNode(node.expression)
-    @addSemicolon()
+    @_addSemicolon()
 
   onFunctionCall: (node) ->
     @_sourceCode += node.function_name
@@ -111,7 +108,7 @@ class FormatterVisitor extends BaseVisitor
       if isFirst is true
         isFirst = false
       else
-        @addComma()
+        @_addComma()
       @visitNode(parameter)
     @_sourceCode += ")"
 
@@ -119,12 +116,12 @@ class FormatterVisitor extends BaseVisitor
     @visitNode(node.typeAttribute)
     @_sourceCode += " "
     @visitNodes(node.declarators)
-    @addSemicolon(newline)
+    @_addSemicolon(newline)
 
   onDeclaratorItem: (node) ->
     @visitNode(node.name)
     if node.initializer?
-      @addOperator("=")
+      @_addOperator("=")
       @visitNode(node.initializer)
 
   onIfStatement: (node) ->
@@ -133,14 +130,14 @@ class FormatterVisitor extends BaseVisitor
     @_sourceCode += ")"
     if node.body.type isnt "scope"
       @_indentLevel += 1
-      @addNewLine()
+      @_addNewLine()
       @_indentLevel -= 1
     @visitNode(node.body)
     if node.elseBody?
       @_sourceCode += "else "
       unless node.elseBody.type in ["if_statement", "scope"]
         @_indentLevel += 1
-        @addNewLine()
+        @_addNewLine()
         @_indentLevel -= 1
       @visitNode(node.elseBody)
 
@@ -148,7 +145,7 @@ class FormatterVisitor extends BaseVisitor
     @_sourceCode += if @minified then "for(" else "for ("
     @visitNode(node.initializer, false)
     @visitNode(node.condition)
-    @addSemicolon(false)
+    @_addSemicolon(false)
     @visitNode(node.increment)
     @_sourceCode += ")"
     # TODO(jeremie) handle when its not a scope, it should be done in a generic
@@ -159,12 +156,12 @@ class FormatterVisitor extends BaseVisitor
     @_sourceCode += "struct "
     @_sourceCode += node.name
     @_indentLevel += 1
-    @addLeftBrace()
+    @_addLeftBrace()
     for member in node.members
       @visitNode(member)
     @_indentLevel -= 1
-    @addRightBrace(false)
-    @addSemicolon()
+    @_addRightBrace(false)
+    @_addSemicolon()
 
   onBinary: (node) ->
 
@@ -224,7 +221,7 @@ class FormatterVisitor extends BaseVisitor
         if isFirst is true
           isFirst = false
         else
-          @addComma()
+          @_addComma()
         @visitNode(parameter)
       @_sourceCode += ")"
 
@@ -235,10 +232,10 @@ class FormatterVisitor extends BaseVisitor
       @_sourceCode += node.value
 
     if node.guarded_statements?
-      @addNewLine()
+      @_addNewLine()
       @visitNodes(node.guarded_statements)
       @_sourceCode += "#endif"
 
-    @addNewLine()
+    @_addNewLine()
 
 module.exports = FormatterVisitor
