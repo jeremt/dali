@@ -1,5 +1,7 @@
+uniform highp sampler2D texture;
 uniform mediump vec4 color;
 varying vec4 vColor;
+varying vec2 vUv;
 
 const float a = 0.2;
 
@@ -13,6 +15,9 @@ vec3 darken(vec3 color, float rate ) {
 }
 
 void main() {
+  vec3 px = texture2D(texture, vUv).rgb;
+  float truc;
+  color *= 2;
   if (vColor == vec4(0, 0, 0, 1))
     gl_FragColor = vec4(0.5);
   else if (true)
