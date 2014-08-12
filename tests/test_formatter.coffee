@@ -1,12 +1,12 @@
 
 fs = require "fs"
 pegjs = require "pegjs"
-Formatter = require "../visitors/formatter"
-Printer = require "../utils/printer"
+Formatter = require "../lib/visitors/formatter"
+Printer = require "../lib/utils/printer"
 
 testGetSource = ->
-  source = fs.readFileSync("../../examples/full.glsl").toString()
-  grammar = fs.readFileSync("../../grammar/glsl.pegjs").toString()
+  source = fs.readFileSync("../examples/full.glsl").toString()
+  grammar = fs.readFileSync("../grammar/glsl.pegjs").toString()
   try
     parser = pegjs.buildParser(grammar)
     data = parser.parse(source)
