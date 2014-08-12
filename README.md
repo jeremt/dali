@@ -3,6 +3,17 @@ dali
 
 Simplified shader language inspired by Python like syntax.
 
+The language will be written by iteration from the original GLSL language syntax.
+
+Features that will be added (more or less in this order):
+
+- Shader combinaison
+- Import
+- Change syntax to be more "python-like"
+- Inference and default values
+- Compiler instruction (@unfold, @inline, @enable(GL_ALPHA_TEST)...)
+- Debug (something like print_at_pixel 4, 4, my_vec3)
+
 Examples
 --------
 

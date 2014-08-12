@@ -1,0 +1,57 @@
+
+glsl: {
+// indentation doesnt matter
+#ifdef GL_ES
+#define highp
+#endif
+}
+
+glsl:
+  // it should be indent by at least 1 tab
+  #ifdef GL_ES
+  #define highp
+  #endif
+
+struct Light:
+  position = vec3(1.0, 1.0, 1.0)
+  color = vec3(1.0, 1.0, 1.0)
+  power = 0.5
+
+# This structure is extended from Light, which means that all light's
+# attributes will be copied.
+struct DirectionalLight(Light):
+  direction = vec3(1, 1, 0)
+
+uniform light: Light
+
+def darken(color: mediump vec3, value: float): -> vec3
+  return color - value
+
+def lighten(color, value = 0.5):
+  return color - value
+
+# auto inline
+lambda add(a, b): a + b
+
+# explicit inline
+@inline
+def mul(a, b):
+  return a * b
+
+@unfold
+def sub(a, b): return a - b
+
+import colorutils : darken, lighten
+import alpha
+
+uniform texture: -> mediump sampler2D
+uniform color: -> vec3
+
+varying vUv: -> vec2
+
+def main():
+  gl_FragColor = texture2D(texture, vUv).rgb
+  for i in 0..2 by 0.2:
+    gl_FragColor.a *= sin(i) / 2.0
+  gl_FragColor *= lighten(alpha(color, 0.5).rgb, 10) * darken(color)
+  gl_FragColor = filters.bw(gl_FragColor)
