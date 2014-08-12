@@ -16,8 +16,6 @@
 // Fixed bugs
 // * operator < and > was <null and >null
 // Added features
-// * ...
-// To do
 // * Handle multi-line macro
 
 /*
@@ -246,7 +244,7 @@ macro_call_line =
 preprocessor_define
   = "#" _? "define" _ identifier:macro_identifier
     parameters:preprocessor_parameter_list?
-    [ \t]* token_string:(defname:[^\n]* {return defname.join("")})
+    [ \t]* token_string:preprocessor_define_body?
     (newLine/EOF) {
     return new node({
          type: "preprocessor",
@@ -256,6 +254,9 @@ preprocessor_define
          parameters: parameters || null
        });
      }
+
+preprocessor_define_body
+  = $((!(!'\\' '\n') .)+)
 
 preprocessor_if
   = "#" _? directive:("ifdef" / "ifndef"/ "if")

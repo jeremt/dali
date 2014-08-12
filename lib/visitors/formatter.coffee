@@ -212,7 +212,6 @@ class FormatterVisitor extends BaseVisitor
 
     if node.identifier?
       @_sourceCode += node.identifier
-      @_sourceCode += " "
 
     if node.parameters?
       @_sourceCode += "("
@@ -226,6 +225,7 @@ class FormatterVisitor extends BaseVisitor
       @_sourceCode += ")"
 
     if node.token_string?
+      @_sourceCode += " "
       @_sourceCode += node.token_string
 
     if node.value?

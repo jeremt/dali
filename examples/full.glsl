@@ -8,6 +8,9 @@
 #define UP vec3(0, 1, 0)
 #define MAX(a, b) (a > b ? a : b)
 
+#define MIN(a, b) \
+  a < b ? a : b
+
 uniform highp sampler2D texture;
 uniform mediump vec4 color;
 varying vec4 vColor;
