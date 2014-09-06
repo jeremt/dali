@@ -1,5 +1,5 @@
 
-BaseVisitor = require("./base")
+BaseVisitor = require "./base"
 
 # @class FormatterVisitor
 # Handle the convertion of an ast node to a glsl source code. It also handle

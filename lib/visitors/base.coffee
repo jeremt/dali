@@ -30,6 +30,8 @@ class BaseVisitor
   # @param {Object} the AST node to serialize.
   #
   visitNode: (node, args...) ->
+    if typeof node.type isnt "string"
+      throw new VisitorError("invalid node type")
     funcName = @getFunctionName(node.type)
     if @[funcName]?
       @[funcName](node, args...)

@@ -48,21 +48,28 @@
     return result;
   }
 
+  // Check whether the given node is a directive.
+  function is_directive(node) {
+    return node.type === "branch_directive" ||
+           node.type === "define_directive";
+  }
+
   // Create a list of `directive` and `code_string` nodes.
   function build_source(code) {
     var result = []
       , i = 0;
     while (i < code.length) {
-      if (code[i].type === "directive") {
+      if (is_directive(code[i])) {
         result.push(code[i]);
         ++i;
       } else {
         var code_string = "";
-        while (code[i] && code[i].type !== "directive") {
+        while (code[i] && !is_directive(code[i])) {
           code_string += code[i];
           ++i;
         }
-        result.push({type: "code_string", data: code_string});
+        if (!/^[ \t\n]+$/.test(code_string))
+          result.push({type: "code_string", data: code_string});
       }
     }
     return result;
@@ -88,10 +95,15 @@
 // ----------------------------------------------------------------------------
 
 start
-  = source_code
+  = source_code:source_code {
+    return {
+      type: "root",
+      data: source_code
+    };
+  }
 
 source_code
-  = code:(directive / $(!("#" _? keyword_directive _?) .))* {
+  = code:(directive / $(!("#" _? keyword_directive) .))* {
     return build_source(code);
   }
 
@@ -116,12 +128,12 @@ keyword_directive
 // ----------------------------------------------------------------------------
 
 define_directive "#define"
-  = directive:$("#" _? "define") _
+  = "#" _? "define" _
     identifier:identifier
     parameters:define_parameters? 
     body:define_body? {
-  return new node("directive", {
-    directive: directive,
+  return new node("define_directive", {
+    directive: "#define",
     identifier: identifier,
     parameters: parameters,
     body: body
@@ -138,18 +150,18 @@ define_parameters =
     return [first].concat(rest);
   }
 
-define_body
-  = _ value:$((!(!"\\" "\n") .)+) "\n" {
+define_body // everything which isnt a \n (and skip if \\n)
+  = _ value:$(!(!"\\" ("\n" / eof)) .)+ ("\n" / eof) {
   return new node("code_string", {value: value});
 }
 
 // Conditions
 // ----------------------------------------------------------------------------
 
-if_directive
+if_directive "#if, #ifdef, #ifndef"
   = "#" _? directive:("ifdef" / "ifndef"/ "if")
      _ condition:condition '\n' {
-       return new node("directive", {
+       return new node("branch_directive", {
          directive: "#" + directive,
          condition: condition
        });
@@ -157,7 +169,7 @@ if_directive
 
 elif_directive
   = "#" _? "elif" _ condition:condition '\n' {
-      return new node("preprocessor_sub_branch", {
+      return new node("sub_branch", {
         directive: "#elif",
         condition: condition
       });
@@ -165,11 +177,11 @@ elif_directive
 
 else_directive
   = "#" _? "else" _? '\n' {
-    return new node("preprocessor_sub_branch", {directive: "#else"});
+    return new node("sub_branch", {directive: "#else"});
   }
 
-endif_directive
-  = "#" _? "endif" _? '\n'
+endif_directive "#endif"
+  = "#" _? "endif" _? ('\n' / eof)
 
 branch_directive
   = if_directive:(if_directive source_code)
@@ -193,7 +205,9 @@ base_expr
   = defined_operator
   / binary
   / variable
-  / "(" condition ")"
+  / "(" condition:condition ")" {
+    return condition;
+  }
 
 binary
   = left:variable _? operator:binary_operator _? right:variable {
@@ -236,7 +250,7 @@ value
   = value:$[0-9]+ {
   return {
     type: "value",
-    value: value
+    value: parseInt(value)
   }
 }
 
@@ -244,20 +258,9 @@ value
 // ----------------------------------------------------------------------------
 
 identifier "identifier"
-  = !(keyword) name:$([A-Za-z_][A-Za-z_0-9]*) {
+  = name:$([A-Za-z_][A-Za-z_0-9]*) {
     return new node("identifier", {name: name});
   }
-
-keyword "keyword"
-  = "attribute" / "const" / "bool" / "float" / "int"
-  / "break" / "continue" / "do" / "else" / "for" / "if"
-  / "discard" / "return" / vector / matrix
-  / "in" / "out" / "inout" / "uniform" / "varying"
-  / "sampler2D" / "samplerCube" / "struct" / "void"
-  / "while" / "highp" / "mediump" / "lowp" / "true" / "false"
-
-vector = name:$([bi]? "vec" [234])
-matrix = name:$("mat" [234])
 
 // Whitespaces
 // ----------------------------------------------------------------------------
