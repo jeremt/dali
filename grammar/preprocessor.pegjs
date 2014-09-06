@@ -88,10 +88,12 @@
 // ----------------------------------------------------------------------------
 
 start
-  = statement*
+  = source_code
 
-statement
-  = __? statement:directive __? { return statement; }
+source_code
+  = code:(directive / $(!("#" _? keyword_directive _?) .))* {
+    return build_source(code);
+  }
 
 directive
   = define_directive
@@ -237,14 +239,6 @@ value
     value: value
   }
 }
-
-// Source code (everything but preprocessor declaration)
-// ----------------------------------------------------------------------------
-
-source_code
-  = code:(directive / $(!("#" _? keyword_directive _?) .))* {
-    return build_source(code);
-  }
 
 // Identifier
 // ----------------------------------------------------------------------------
