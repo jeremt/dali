@@ -4,6 +4,9 @@
 
 {
 
+  // True to add id, line and column information in nodes.
+  var verbose = false;
+
   // This ID is incremented for each node in order to provide a UID for each
   //    node of the ast.
   var current_id = 0;
@@ -14,18 +17,20 @@
   // @param {String} type the type of the given ast node
   // @param {Object} props the bonus properties to add to the node
   //
-  function Node(type, props) {
+  function node(type, props) {
+    if (verbose) {
+      this.id = current_id++;
+      this.line = line();
+      this.column = column();
+    }
     this.type = type;
-    // this.id = current_id++;
-    // this.line = line();
-    // this.column = column();
     for (var prop in props) {
       if (props.hasOwnProperty(prop))
         this[prop] = props[prop];
     }
   }
 
-  // Generates AST Nodes for a preprocessor branch.
+  // Generates AST nodes for a preprocessor branch.
   function branch_directive(if_directive, elif_directives, else_directive) {
     var elseList = elif_directives;
     if (else_directive) {
@@ -43,6 +48,7 @@
     return result;
   }
 
+  // Create a list of `directive` and `code_source` nodes.
   function build_source(code) {
     var result = []
       , i = 0;
@@ -58,6 +64,20 @@
         }
         result.push({type: "code_source", data: code_source});
       }
+    }
+    return result;
+  }
+
+  // Helper function to daisy chain together a series of binary operations.
+  function daisy_chain(head, tail) {
+    var result = head;
+    for (var i = 0; i < tail.length; i++) {
+      result = {
+        type: "binary",
+        operator: tail[i][1],
+        left: result,
+        right: tail[i][3]
+      };
     }
     return result;
   }
@@ -98,7 +118,7 @@ define_directive "#define"
     identifier:identifier
     parameters:define_parameters? 
     body:define_body? {
-  return new Node("directive", {
+  return new node("directive", {
     directive: directive,
     identifier: identifier,
     parameters: parameters,
@@ -118,7 +138,7 @@ define_parameters =
 
 define_body
   = _ value:$((!(!"\\" "\n") .)+) "\n" {
-  return new Node("code_string", {value: value});
+  return new node("code_string", {value: value});
 }
 
 // Conditions
@@ -126,24 +146,24 @@ define_body
 
 if_directive
   = "#" _? directive:("ifdef" / "ifndef"/ "if")
-     _ value:$([^\n]+) '\n' {
-       return new Node("directive", {
+     _ condition:condition '\n' {
+       return new node("directive", {
          directive: "#" + directive,
-         value: value
+         condition: condition
        });
      }
 
 elif_directive
-  = "#" _? "elif" _ value:$([^\n]*) _? '\n' {
-      return new Node("preprocessor_sub_branch", {
+  = "#" _? "elif" _ condition:condition '\n' {
+      return new node("preprocessor_sub_branch", {
         directive: "#elif",
-        value: value
+        condition: condition
       });
     }
 
 else_directive
   = "#" _? "else" _? '\n' {
-    return new Node("preprocessor_sub_branch", {directive: "#else"});
+    return new node("preprocessor_sub_branch", {directive: "#else"});
   }
 
 endif_directive
@@ -156,6 +176,67 @@ branch_directive
     endif_directive {
       return branch_directive(if_directive, elif_directive, else_directive);
     }
+
+condition
+  = left:or_expr rest:(_? "&&" _? or_expr)* {
+    return daisy_chain(left, rest);
+  }
+
+or_expr
+  = left:base_expr rest:(_? "||" _? base_expr)* {
+    return daisy_chain(left, rest);
+  }
+
+base_expr
+  = defined_operator
+  / binary
+  / variable
+  / "(" condition ")"
+
+binary
+  = left:variable _? operator:binary_operator _? right:variable {
+    return {
+      type: "binary",
+      operator: operator,
+      left: left,
+      right: right
+    }
+  }
+
+binary_operator
+  = "=="
+  / ">="
+  / "<="
+  / "<"
+  / ">"
+
+defined_operator
+  = not:"!"? "defined" _? "(" _? value:identifier _? ")" {
+    return {
+      type: "unary",
+      operator: not ? "!defined" : "defined ",
+      value: value
+    };
+  }
+  / not:"!"? _? "defined" _ value:identifier {
+    return {
+      type: "unary",
+      operator: not ? "!defined" : "defined ",
+      value: value
+    };
+  }
+
+variable
+  = identifier
+  / value
+
+value
+  = value:$[0-9]+ {
+  return {
+    type: "value",
+    value: value
+  }
+}
 
 // Source code (everything but preprocessor declaration)
 // ----------------------------------------------------------------------------
@@ -170,7 +251,7 @@ source_code
 
 identifier "identifier"
   = !(keyword) name:$([A-Za-z_][A-Za-z_0-9]*) {
-    return new Node("identifier", {name: name});
+    return new node("identifier", {name: name});
   }
 
 keyword "keyword"

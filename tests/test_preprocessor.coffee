@@ -6,7 +6,9 @@ Printer = require "../lib/utils/printer"
 source = """
 
 // Very simple
+#if VERSION == 33
 #define DALI
+#endif
 
 // Simple
 #define ZERO_VEC3 vec3(0, 0, 0)
