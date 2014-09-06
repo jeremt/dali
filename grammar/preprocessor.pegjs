@@ -48,7 +48,7 @@
     return result;
   }
 
-  // Create a list of `directive` and `code_source` nodes.
+  // Create a list of `directive` and `code_string` nodes.
   function build_source(code) {
     var result = []
       , i = 0;
@@ -57,12 +57,12 @@
         result.push(code[i]);
         ++i;
       } else {
-        var code_source = "";
+        var code_string = "";
         while (code[i] && code[i].type !== "directive") {
-          code_source += code[i];
+          code_string += code[i];
           ++i;
         }
-        result.push({type: "code_source", data: code_source});
+        result.push({type: "code_string", data: code_string});
       }
     }
     return result;
