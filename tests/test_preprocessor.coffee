@@ -16,6 +16,10 @@ source = """
   vec2(0, \
     0)
 
+#define cos(angle) \
+    (angle == 90 ? 1 : \
+     angle == 180 ? -1 : 0)
+
 // With one parameter
 #define ZERO(type) type(0)
 
@@ -23,6 +27,8 @@ source = """
 #define LERP(src, dest, rate) src + (dest - src) * rate 
 
 #ifndef TOTO
+#define TOTO 42
+int i;
 #endif
 
 """

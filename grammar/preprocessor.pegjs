@@ -29,7 +29,7 @@
       elseList = elseList.concat([else_directive]);
     }
     var result = if_directive[0];
-    result.guarded_statements = if_directive[1].statements;
+    result.guarded_statements = if_directive[1];
     var current_branch = result;
     for (var i = 0; i < elseList.length; i++) {
       current_branch.elseBody = elseList[i][0];
@@ -126,7 +126,7 @@ preprocessor_branch
 // ----------------------------------------------------------------------------
 
 source_code
-  = /* TODO */
+  = $(!"#endif" .)* // TODO(jeremie) Parse recursivly inner preprocessor rules 
 
 // Identifier
 // ----------------------------------------------------------------------------
