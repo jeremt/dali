@@ -29,6 +29,13 @@ source = """
 #ifndef TOTO
 #define TOTO 42
 int i;
+#ifdef TEST
+#define TRUC(X) X
+#elif defined(TEST2)
+#define TRUC(X) (2 * X)
+#else
+#define TRUC(X) (3 * X)
+#endif
 #endif
 
 """

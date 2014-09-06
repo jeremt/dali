@@ -1,4 +1,7 @@
 
+// Bug I'm lazy to correct:  you write #define, #error... within a comment
+// or string it's won't work.
+
 {
 
   // This ID is incremented for each node in order to provide a UID for each
@@ -23,7 +26,7 @@
   }
 
   // Generates AST Nodes for a preprocessor branch.
-  function preprocessor_branch(if_directive, elif_directives, else_directive) {
+  function branch_directive(if_directive, elif_directives, else_directive) {
     var elseList = elif_directives;
     if (else_directive) {
       elseList = elseList.concat([else_directive]);
@@ -34,8 +37,27 @@
     for (var i = 0; i < elseList.length; i++) {
       current_branch.elseBody = elseList[i][0];
       current_branch.elseBody.guarded_statements =
-        elseList[i][1].statements;
+        elseList[i][1];
       current_branch = current_branch.elseBody;
+    }
+    return result;
+  }
+
+  function build_source(code) {
+    var result = []
+      , i = 0;
+    while (i < code.length) {
+      if (code[i].type === "directive") {
+        result.push(code[i]);
+        ++i;
+      } else {
+        var code_source = "";
+        while (code[i] && code[i].type !== "directive") {
+          code_source += code[i];
+          ++i;
+        }
+        result.push({type: "code_source", data: code_source});
+      }
     }
     return result;
   }
@@ -49,21 +71,34 @@ start
   = statement*
 
 statement
-  = __? statement:preprocessor_directive __? { return statement; }
+  = __? statement:directive __? { return statement; }
 
-preprocessor_directive
-  = preprocessor_define
-  / preprocessor_branch
+directive
+  = define_directive
+  / branch_directive
+
+// Preprocessor utils
+// ----------------------------------------------------------------------------
+
+keyword_directive
+  = "endif"
+  / "if"
+  / "ifdef"
+  / "ifndef"
+  / "elif"
+  / "else"
+  / "define"
+  / "error"
 
 // Define
 // ----------------------------------------------------------------------------
 
-preprocessor_define "#define"
+define_directive "#define"
   = directive:$("#" _? "define") _
     identifier:identifier
     parameters:define_parameters? 
     body:define_body? {
-  return new Node("preprocessor_define", {
+  return new Node("directive", {
     directive: directive,
     identifier: identifier,
     parameters: parameters,
@@ -89,16 +124,16 @@ define_body
 // Conditions
 // ----------------------------------------------------------------------------
 
-preprocessor_if
+if_directive
   = "#" _? directive:("ifdef" / "ifndef"/ "if")
      _ value:$([^\n]+) '\n' {
-       return new Node("preprocessor_sub_branch", {
+       return new Node("directive", {
          directive: "#" + directive,
          value: value
        });
      }
 
-preprocessor_else_if
+elif_directive
   = "#" _? "elif" _ value:$([^\n]*) _? '\n' {
       return new Node("preprocessor_sub_branch", {
         directive: "#elif",
@@ -106,34 +141,36 @@ preprocessor_else_if
       });
     }
 
-preprocessor_else
+else_directive
   = "#" _? "else" _? '\n' {
     return new Node("preprocessor_sub_branch", {directive: "#else"});
   }
 
-preprocessor_end
+endif_directive
   = "#" _? "endif" _? '\n'
 
-preprocessor_branch
-  = if_directive:(preprocessor_if source_code)
-    elif_directive:(preprocessor_else_if source_code)*
-    else_directive:(preprocessor_else source_code)?
-    preprocessor_end {
-      return preprocessor_branch(if_directive, elif_directive, else_directive);
+branch_directive
+  = if_directive:(if_directive source_code)
+    elif_directive:(elif_directive source_code)*
+    else_directive:(else_directive source_code)?
+    endif_directive {
+      return branch_directive(if_directive, elif_directive, else_directive);
     }
 
 // Source code (everything but preprocessor declaration)
 // ----------------------------------------------------------------------------
 
 source_code
-  = $(!"#endif" .)* // TODO(jeremie) Parse recursivly inner preprocessor rules 
+  = code:(directive / $(!("#" _? keyword_directive _?) .))* {
+    return build_source(code);
+  }
 
 // Identifier
 // ----------------------------------------------------------------------------
 
 identifier "identifier"
   = !(keyword) name:$([A-Za-z_][A-Za-z_0-9]*) {
-     return new Node("identifier", {name: name});
+    return new Node("identifier", {name: name});
   }
 
 keyword "keyword"
